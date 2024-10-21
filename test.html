@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Events with Alarms to Calendar</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 50px;
+        }
+        h1 {
+            color: #333;
+        }
+        a {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #28a745;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Add Methotrexate Monitoring Blood Tests and Clinic Review to Your Calendar</h1>
+    <p>This will add blood test events at 2, 4, 6, and 10 weeks, and a clinic review event at 12 weeks with an alarm for each event. Click the button below to add them to your calendar:</p>
+    <a id="downloadLink" href="#">Add to Calendar</a>
+
+    <script>
+        // Function to calculate the date for the event, based on weeks offset
+        function getEventDate(weeksOffset) {
+            const today = new Date();
+            const eventDate = new Date(today);
+            eventDate.setDate(today.getDate() + (weeksOffset * 7));
+            return eventDate;
+        }
+
+        // Function to format a date in the YYYYMMDDTHHMMSSZ format for .ics
+        function formatDateForICS(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hour = '09';  // Event start at 9:00 AM
+            const minute = '00';
+            const second = '00';
+
+            return `${year}${month}${day}T${hour}${minute}${second}`;
+        }
+
+        // Function to create the .ics file with events at 2, 4, 6, 10 weeks, and a 12-week clinic review
+        function createICSFile() {
+            const weeksArray = [2, 4, 6, 10];  // Weeks for blood test events
+            let icsContent = `
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Your Company//Your Product//EN`;
+
+            // Loop to add blood test events at 2, 4, 6, and 10 weeks
+            weeksArray.forEach(weeks => {
+                const eventDate = getEventDate(weeks);
+                const startTime = formatDateForICS(eventDate);
+                const endTime = formatDateForICS(new Date(eventDate.getTime() + 60 * 60 * 1000)); // 1-hour event
+                
+                icsContent += `
+BEGIN:VEVENT
+UID:${Date.now() + weeks}@yourwebsite.com
+DTSTAMP:${startTime}Z
+DTSTART:${startTime}Z
+DTEND:${endTime}Z
+SUMMARY:Methotrexate monitoring blood tests
+DESCRIPTION:Methotrexate monitoring blood test at week ${weeks}.
+LOCATION:Your Local Clinic
+BEGIN:VALARM
+TRIGGER:-PT15M  <!-- Alarm triggers 15 minutes before the event -->
+ACTION:DISPLAY
+DESCRIPTION:Reminder for Methotrexate monitoring blood test.
+END:VALARM
+END:VEVENT`;
+            });
+
+            // Add the 12-week clinic review event
+            const clinicReviewDate = getEventDate(12);
+            const clinicStartTime = formatDateForICS(clinicReviewDate);
+            const clinicEndTime = formatDateForICS(new Date(clinicReviewDate.getTime() + 60 * 60 * 1000)); // 1-hour event
+
+            icsContent += `
+BEGIN:VEVENT
+UID:${Date.now() + 12}@yourwebsite.com
+DTSTAMP:${clinicStartTime}Z
+DTSTART:${clinicStartTime}Z
+DTEND:${clinicEndTime}Z
+SUMMARY:Clinic review in Rheumatology - if no appointment has arrived please email bhnt.rheumatology@nhs.net
+DESCRIPTION:This is a reminder for your 12-week clinic review in Rheumatology. If you haven't received your appointment, please email bhnt.rheumatology@nhs.net.
+LOCATION:Your Local Clinic
+BEGIN:VALARM
+TRIGGER:-PT15M  <!-- Alarm triggers 15 minutes before the event -->
+ACTION:DISPLAY
+DESCRIPTION:Reminder for Rheumatology Clinic Review.
+END:VALARM
+END:VEVENT`;
+
+            icsContent += `
+END:VCALENDAR`;
+
+            // Create a Blob from the .ics content
+            const blob = new Blob([icsContent], { type: 'text/calendar' });
+
+            // Create a download link for the Blob
+            const downloadLink = document.getElementById('downloadLink');
+            downloadLink.href = URL.createObjectURL(blob);
+            downloadLink.download = 'Methotrexate_And_Clinic_Review_Events_With_Alarms.ics';
+        }
+
+        // Call the function when the page loads
+        window.onload = createICSFile;
+    </script>
+</body>
+</html>
